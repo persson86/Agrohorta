@@ -1,0 +1,104 @@
+{
+  "project_info": {
+    "project_number": "619967095274",
+    "firebase_url": "https://agro-horta.firebaseio.com",
+    "project_id": "agro-horta",
+    "storage_bucket": "agro-horta.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:619967095274:android:77e8d0eabd3a08ba",
+        "android_client_info": {
+          "package_name": "com.mob.schneiderpersson.agrohortav1"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "619967095274-a1eb4t7l1fklvc96mmoc9r4krjtuabuh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_oTtmF51uFAbvqfUyOCUALGbSm3PLMdk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:619967095274:android:e78a710b6e725a07",
+        "android_client_info": {
+          "package_name": "com.mob.schneiderpersson.agrohorta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "619967095274-a1eb4t7l1fklvc96mmoc9r4krjtuabuh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_oTtmF51uFAbvqfUyOCUALGbSm3PLMdk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:619967095274:android:48f8e33acc8dec5e",
+        "android_client_info": {
+          "package_name": "com.mobile.persson.agrohorta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "619967095274-a1eb4t7l1fklvc96mmoc9r4krjtuabuh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_oTtmF51uFAbvqfUyOCUALGbSm3PLMdk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
