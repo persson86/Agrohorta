@@ -4,16 +4,14 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -22,7 +20,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
@@ -41,8 +38,6 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
-
-import com.facebook.FacebookSdk;
 
 @EActivity(R.layout.activity_login)
 public class LoginActivity extends AppCompatActivity {
@@ -64,12 +59,22 @@ public class LoginActivity extends AppCompatActivity {
 
     @ViewById
     com.google.android.gms.common.SignInButton btSignIn;
+    @ViewById
+    LoginButton btFacebookSignIn;
 
     @AfterViews
     void initiliaze() {
-        setAuthStateListener();
-        googleAuthConfig();
-        facebookAuthConfig();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            ProfileActivity_.intent(getApplicationContext())
+                    .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .start();
+            finish();
+        } else {
+
+            setAuthStateListener();
+            googleAuthConfig();
+            facebookAuthConfig();
+        }
     }
 
     @Override
@@ -111,12 +116,30 @@ public class LoginActivity extends AppCompatActivity {
     @Click
     void btSignIn() {
         signInType = GOOGLE_SIGN_IN;
-        signIn();
+        googleSignIn();
     }
 
-    @Click
-    void btSignOut() {
-        signOut();
+    private void setAuthStateListener() {
+        auth = FirebaseAuth.getInstance();
+        authStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                    if (user.getDisplayName() != null) {
+
+                        ProfileActivity_.intent(getApplicationContext())
+                                .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                .start();
+                        finish();
+                    }
+                    //Toast.makeText(getApplicationContext(), user.getDisplayName(), Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+            }
+        };
     }
 
     private void googleAuthConfig() {
@@ -136,13 +159,38 @@ public class LoginActivity extends AppCompatActivity {
                 .build();
     }
 
-    private void signIn() {
+    private void facebookAuthConfig() {
+        callbackManager = CallbackManager.Factory.create();
+        btFacebookSignIn.setReadPermissions("email", "public_profile");
+        btFacebookSignIn.setText("teste123");
+        btFacebookSignIn.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                Log.d(TAG, "facebook:onSuccess:" + loginResult);
+                signInType = FACEBOOK_SIGN_IN;
+                handleFacebookAccessToken(loginResult.getAccessToken());
+            }
+
+            @Override
+            public void onCancel() {
+                Log.d(TAG, "facebook:onCancel");
+                // ...
+            }
+
+            @Override
+            public void onError(FacebookException error) {
+                Log.d(TAG, "facebook:onError", error);
+                // ...
+            }
+        });
+    }
+
+    private void googleSignIn() {
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
     private void signOut() {
-        UserInfo u = FirebaseAuth.getInstance().getCurrentUser();
         FirebaseAuth.getInstance().signOut();
 
         Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(
@@ -150,8 +198,6 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onResult(Status status) {
                         Toast.makeText(LoginActivity.this, "Signed Out!!!", Toast.LENGTH_SHORT).show();
-                        //sign_in_button.setVisibility(View.VISIBLE);
-                        //sign_out_button.setVisibility(View.GONE);
                     }
                 });
 
@@ -184,53 +230,6 @@ public class LoginActivity extends AppCompatActivity {
         progressDialog.setTitle("Logando");
         progressDialog.setMessage("aguarde");
         progressDialog.show();
-    }
-
-    private void setAuthStateListener() {
-        auth = FirebaseAuth.getInstance();
-        authStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
-                    if (user.getDisplayName() != null)
-                        Toast.makeText(getApplicationContext(), user.getDisplayName(), Toast.LENGTH_SHORT).show();
-                } else {
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
-                }
-            }
-        };
-    }
-
-    private void facebookAuthConfig() {
-
-        signInType = FACEBOOK_SIGN_IN;
-
-        // Initialize Facebook Login button
-        callbackManager = CallbackManager.Factory.create();
-        LoginButton loginButton = (LoginButton) findViewById(R.id.btFacebookSignIn);
-        loginButton.setReadPermissions("email", "public_profile");
-
-        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                Log.d(TAG, "facebook:onSuccess:" + loginResult);
-                handleFacebookAccessToken(loginResult.getAccessToken());
-            }
-
-            @Override
-            public void onCancel() {
-                Log.d(TAG, "facebook:onCancel");
-                // ...
-            }
-
-            @Override
-            public void onError(FacebookException error) {
-                Log.d(TAG, "facebook:onError", error);
-                // ...
-            }
-        });
     }
 
     private void handleFacebookAccessToken(AccessToken token) {

@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private GoogleApiClient googleApiClient;
 
     private ProgressDialog progressDialog;
+    private final String TAG = getClass().toString();
 
     @ViewById
     Toolbar toolbar;
@@ -75,13 +76,12 @@ public class MainActivity extends AppCompatActivity {
     @AfterViews
     void initialize() {
         startDialog();
+        setAuthStateListener();
         googleAuthConfig();
         loadToolbar();
 
         FacebookSdk.sdkInitialize(getApplicationContext());
-        AppEventsLogger.activateApp(this);
-
-        //String name = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
+        //AppEventsLogger.activateApp(this);
 
         progressDialog.dismiss();
     }
@@ -89,13 +89,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        String name;
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             UserInfo user = FirebaseAuth.getInstance().getCurrentUser();
             loadImageProfile(user.getPhotoUrl());
             Toast.makeText(this, user.getDisplayName(), Toast.LENGTH_SHORT).show();
-        }
-        else
+        } else
             ivProfile.setImageResource(R.drawable.ic_account_circle_white_48dp);
     }
 
@@ -132,18 +130,20 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
+    }
 
+    private void setAuthStateListener() {
         auth = FirebaseAuth.getInstance();
         authStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                    //Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                     if (user.getDisplayName() != null)
                         Toast.makeText(getApplicationContext(), user.getDisplayName(), Toast.LENGTH_SHORT).show();
                 } else {
-                    //Log.d(TAG, "onAuthStateChanged:signed_out");
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
             }
         };
