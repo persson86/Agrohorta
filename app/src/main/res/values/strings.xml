@@ -3,4 +3,6 @@
 
     //Firebase
     <string name="firebase_node_catalogo">catalogo</string>
+    //Facebook
+    <string name="facebook_app_id">480409765463045</string>
 </resources>

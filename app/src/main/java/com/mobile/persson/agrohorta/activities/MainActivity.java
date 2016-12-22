@@ -24,6 +24,8 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -68,13 +70,16 @@ public class MainActivity extends AppCompatActivity {
     @ViewById
     TextView tvToolbarTitle;
     @ViewById
-    ImageView ivProfile;
+    de.hdodenhof.circleimageview.CircleImageView ivProfile;
 
     @AfterViews
     void initialize() {
         startDialog();
         googleAuthConfig();
         loadToolbar();
+
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        AppEventsLogger.activateApp(this);
 
         //String name = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
 
