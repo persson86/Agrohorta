@@ -1,11 +1,13 @@
 package com.mobile.persson.agrohorta.activities;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ContextThemeWrapper;
 import android.util.Log;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -21,8 +23,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -31,7 +31,6 @@ import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.firebase.auth.UserInfo;
 import com.mobile.persson.agrohorta.R;
 
 import org.androidannotations.annotations.AfterViews;
@@ -50,8 +49,8 @@ public class LoginActivity extends AppCompatActivity {
     //Facebook
     CallbackManager callbackManager;
 
-    private final String GOOGLE_SIGN_IN = "GOOGLE";
-    private final String FACEBOOK_SIGN_IN = "FACEBOOK";
+    private final String GOOGLE_SIGN_IN = "google";
+    private final String FACEBOOK_SIGN_IN = "fb";
     private String signInType;
 
     private ProgressDialog progressDialog;
@@ -126,15 +125,12 @@ public class LoginActivity extends AppCompatActivity {
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                     if (user.getDisplayName() != null) {
-
                         ProfileActivity_.intent(getApplicationContext())
                                 .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 .start();
                         finish();
                     }
-                    //Toast.makeText(getApplicationContext(), user.getDisplayName(), Toast.LENGTH_SHORT).show();
                 } else {
                     Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
@@ -192,31 +188,23 @@ public class LoginActivity extends AppCompatActivity {
 
     private void signOut() {
         FirebaseAuth.getInstance().signOut();
-
-        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        Toast.makeText(LoginActivity.this, "Signed Out!!!", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
+        Auth.GoogleSignInApi.signOut(googleApiClient);
         LoginManager.getInstance().logOut();
     }
 
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
-        Log.d(TAG, "firebaseAuthWithGoogle:" + acct.getId());
-
+    private void firebaseAuthWithGoogle(final GoogleSignInAccount acct) {
         final AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         auth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d(TAG, "signInWithCredential:onComplete:" + task.isSuccessful());
                         if (!task.isSuccessful()) {
-                            Log.w(TAG, "signInWithCredential", task.getException());
-                            Toast.makeText(getApplicationContext(), "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
+                            try {
+                                String message = task.getException().getMessage();
+                                alertDialog(message);
+                            } catch (Exception e) {
+                            }
+
                         } else {
                             progressDialog.dismiss();
                             Toast.makeText(LoginActivity.this, task.getResult().getUser().getDisplayName(), Toast.LENGTH_SHORT).show();
@@ -233,25 +221,36 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void handleFacebookAccessToken(AccessToken token) {
-        Log.d(TAG, "handleFacebookAccessToken:" + token);
-
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
         auth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d(TAG, "signInWithCredential:onComplete:" + task.isSuccessful());
-
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
                         if (!task.isSuccessful()) {
-                            Log.w(TAG, "signInWithCredential", task.getException());
-                            Toast.makeText(getApplicationContext(), "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
+                            signOut();
+                            try {
+                                String message = task.getException().getMessage();
+                                alertDialog(message);
+                            } catch (Exception e) {
+                            }
                         }
 
                     }
                 });
+    }
+
+    private void alertDialog(String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.myDialog));
+        builder.setTitle("Authentication failed");
+        builder.setMessage(message);
+        builder.setPositiveButton("ok",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog,
+                                        int which) {
+                    }
+                });
+        builder.show();
+
+
     }
 }

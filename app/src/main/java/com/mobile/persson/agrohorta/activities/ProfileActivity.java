@@ -18,6 +18,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthProvider;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
 import com.mobile.persson.agrohorta.R;
 
@@ -67,7 +69,6 @@ public class ProfileActivity extends AppCompatActivity {
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        //Toast.makeText(.this, "Signed Out!!!", Toast.LENGTH_SHORT).show();
                         finish();
                     }
                 });
