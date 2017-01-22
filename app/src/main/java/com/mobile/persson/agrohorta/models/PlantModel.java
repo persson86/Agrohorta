@@ -5,20 +5,31 @@ package com.mobile.persson.agrohorta.models;
  */
 
 public class PlantModel {
-    private String name;
+    private String plant;
+    private String image;
 
     public PlantModel() {
     }
 
-    public PlantModel(String name) {
-        this.name = name;
+    public String getImage() {
+        return image;
     }
 
-    public String getName() {
-        return name;
+    public void setImage(String image) {
+        this.image = image;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public PlantModel(String plant) {
+        this.plant = plant;
+        this.image = image;
+
+    }
+
+    public String getPlant() {
+        return plant;
+    }
+
+    public void setPlant(String plant) {
+        this.plant = plant;
     }
 }

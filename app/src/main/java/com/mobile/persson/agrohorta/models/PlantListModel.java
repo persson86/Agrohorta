@@ -4,14 +4,14 @@ package com.mobile.persson.agrohorta.models;
  * Created by persson on 13/12/16.
  */
 
-public class CatalogoModel {
+public class PlantListModel {
     private String key;
     private String tipo;
 
-    public CatalogoModel() {
+    public PlantListModel() {
     }
 
-    public CatalogoModel(String key, String tipo) {
+    public PlantListModel(String key, String tipo) {
         key = key;
         tipo = tipo;
     }
