@@ -22,7 +22,8 @@
             android:value="@string/facebook_app_id" />
 
         <activity android:name=".activities.ProfileActivity_" />
-        <activity android:name=".activities.RegisterPlantActivity_"></activity>
+        <activity android:name=".activities.RegisterPlantActivity_" />
+        <activity android:name=".activities.RegisterPlantRelationActivity_"></activity>
     </application>
 
 </manifest>

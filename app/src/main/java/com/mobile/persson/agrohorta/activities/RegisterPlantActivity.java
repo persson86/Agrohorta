@@ -41,14 +41,6 @@ public class RegisterPlantActivity extends AppCompatActivity {
 
     @AfterViews
     void initialize() {
-/*        FirebaseStorage storage = FirebaseStorage.getInstance();
-        // Create a storage reference from our app
-        StorageReference storageRef = storage.getReferenceFromUrl("gs://agro-horta.appspot.com");
-
-        // Create a child reference
-        // imagesRef now points to "images"
-        StorageReference imagesRef = storageRef.child("images");*/
-
         mDatabase = FirebaseDatabase.getInstance().getReference();
     }
 
@@ -60,34 +52,21 @@ public class RegisterPlantActivity extends AppCompatActivity {
     //TODO change method name
     private void logicaFirebase() {
         String deviceLanguage = configApp.getLanguageDevice();
-
         String plantEn = stringHelper.formatInputPlant(etPlantEn.getText().toString());
+        String plantImage = stringHelper.formatImageName(plantEn);
 
+        String nodeDatabase = "database";
         String nodeLanguage = "language_" + deviceLanguage;
         String nodePlantList = "plant_list";
-
-        String image = stringHelper.formatImageName(plantEn);
-
-        //mDatabase.child("database").child(deviceLanguage).child(nodePlantList).child(plantEn).setValue(image);
-
-        String key = mDatabase.child("database").child(nodeLanguage).child(nodePlantList).child(plantEn).push().getKey();
-
-        PlantModel plant = new PlantModel();
-        plant.setImage(image);
-        plant.setPlant(plantEn);
+        String path = "/" + nodeDatabase + "/" + nodeLanguage + "/" + nodePlantList + "/" + plantEn;
 
         Map<String, String> mapPlant = new HashMap<>();
-        mapPlant.put("name", plantEn);
-        mapPlant.put("image", image);
-
-
-        String path = "/database/" + nodeLanguage + "/" + nodePlantList + "/" + plantEn;
+        mapPlant.put("plantName", plantEn);
+        mapPlant.put("plantImage", plantImage);
 
         Map<String, Object> childUpdates = new HashMap<>();
         childUpdates.put(path, mapPlant);
 
         mDatabase.updateChildren(childUpdates);
-
-
     }
 }

@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
     private void initializeApp() {
         mDeviceLanguage = configApp.getLanguageDevice();
 
-        RegisterPlantActivity_.intent(getApplicationContext())
+        RegisterPlantRelationActivity_.intent(getApplicationContext())
                 .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .start();
     }
