@@ -20,6 +20,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.mobile.persson.agrohorta.R;
 
 import org.androidannotations.annotations.AfterViews;
@@ -36,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ProgressDialog mProgressDialog;
     private final static String TAG = "LFSP_DEBUG";
+    FirebaseStorage mStorage;
+    StorageReference mStorageRef;
 
     private String mDeviceLanguage;
 
@@ -51,16 +55,17 @@ public class MainActivity extends AppCompatActivity {
     @AfterViews
     void initialize() {
 
-        //startDialog();
+        startDialog();
         initializeApp();
-/*        setAuthStateListener();
+        setAuthStateListener();
         googleAuthConfig();
         loadToolbar();
 
         FacebookSdk.sdkInitialize(getApplicationContext());
-        //AppEventsLogger.activateApp(this);
 
-        mProgressDialog.dismiss();*/
+        teste();
+
+        mProgressDialog.dismiss();
     }
 
     @Override
@@ -94,10 +99,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeApp() {
         mDeviceLanguage = configApp.getLanguageDevice();
-
-        RegisterPlantRelationActivity_.intent(getApplicationContext())
-                .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .start();
+        mStorage = FirebaseStorage.getInstance();
+        mStorageRef = mStorage.getReferenceFromUrl("gs://agro-horta.appspot.com");
     }
 
     private void googleAuthConfig() {
@@ -145,6 +148,11 @@ public class MainActivity extends AppCompatActivity {
         Glide.with(ivProfile.getContext())
                 .load(url)
                 .into(ivProfile);
+    }
+
+    private void teste() {
+        StorageReference imagesRef = mStorageRef.child("images");
+        imagesRef.child("onion.png");
     }
 
     @Click

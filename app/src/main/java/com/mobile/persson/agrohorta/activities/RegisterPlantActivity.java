@@ -36,7 +36,7 @@ public class RegisterPlantActivity extends AppCompatActivity {
     EditText etPlantEn;
     @ViewById(R.id.et_plant_pt)
     EditText etPlantPt;
-    @ViewById(R.id.bt_register_plant)
+    @ViewById
     Button btRegisterPlant;
 
     @AfterViews
