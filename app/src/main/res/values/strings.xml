@@ -8,4 +8,11 @@
 
     <string name="register_plant_title_en">Plant</string>
     <string name="register_plant_title_pt">Planta</string>
+
+    <string name="node_database">database</string>
+    <string name="node_plant_list">plant_list</string>
+    <string name="node_language">language_</string>
+
+    <string name="firebase_storage_url">gs://agro-horta.appspot.com</string>
+    <string name="folder_images">images</string>
 </resources>

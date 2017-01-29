@@ -1,35 +1,30 @@
 package com.mobile.persson.agrohorta.models;
 
-/**
- * Created by persson on 13/12/16.
- */
-
 public class PlantModel {
-    private String plant;
-    private String image;
+    private String plantName;
+    private String plantImage;
 
     public PlantModel() {
     }
 
-    public String getImage() {
-        return image;
+    public PlantModel(String name, String image) {
+        this.plantName = name;
+        this.plantImage = image;
     }
 
-    public void setImage(String image) {
-        this.image = image;
+    public String getPlantName() {
+        return plantName;
     }
 
-    public PlantModel(String plant) {
-        this.plant = plant;
-        this.image = image;
-
+    public String getPlantImage() {
+        return plantImage;
     }
 
-    public String getPlant() {
-        return plant;
+    public void setPlantName(String plantName) {
+        this.plantName = plantName;
     }
 
-    public void setPlant(String plant) {
-        this.plant = plant;
+    public void setPlantImage(String plantImage) {
+        this.plantImage = plantImage;
     }
 }

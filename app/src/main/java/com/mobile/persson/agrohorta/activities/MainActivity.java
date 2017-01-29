@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,31 +16,46 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.facebook.FacebookSdk;
+//import com.facebook.FacebookSdk;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.mobile.persson.agrohorta.R;
+import com.mobile.persson.agrohorta.models.PlantModel;
+import com.mobile.persson.agrohorta.utils.ImageHelper;
+import com.mobile.persson.agrohorta.utils.StringHelper;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import static android.R.attr.bitmap;
+
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity {
+    private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
     private GoogleApiClient mGoogleApiClient;
@@ -51,6 +67,13 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener mAuthListener;
 
     private String mDeviceLanguage;
+    private String mNodeDatabase;
+    private String mNodeLanguage;
+    private String mNodePlantList;
+
+
+    private List<PlantModel> mPlantList = new ArrayList<>();
+    private List<Bitmap> mImageList = new ArrayList<>();
 
     @Bean
     ConfigApp configApp;
@@ -65,14 +88,14 @@ public class MainActivity extends AppCompatActivity {
     void initialize() {
 
         startDialog();
-        initializeApp();
+        initializeFirebase();
         setAuthStateListener();
         googleAuthConfig();
         loadToolbar();
 
-        FacebookSdk.sdkInitialize(getApplicationContext());
+        //FacebookSdk.sdkInitialize(getApplicationContext());
 
-        teste();
+        //teste();
 
         mProgressDialog.dismiss();
     }
@@ -106,13 +129,36 @@ public class MainActivity extends AppCompatActivity {
         tvToolbarTitle.setText("Catálogo de plantas");
     }
 
-    private void initializeApp() {
-        mDeviceLanguage = configApp.getLanguageDevice();
+    private void initializeFirebase() {
+        //set Firebase nodes
+        mNodeDatabase = getString(R.string.node_database);
+        mNodePlantList = getString(R.string.node_plant_list);
+        mNodeLanguage = getString(R.string.node_language) + configApp.getLanguageDevice();
 
+        //set Firebase references
+        mDatabase = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
-
         mStorage = FirebaseStorage.getInstance();
-        mStorageRef = mStorage.getReferenceFromUrl("gs://agro-horta.appspot.com");
+
+
+        Bitmap bitmap = new ImageHelper(getApplicationContext()).
+                setFileName("tomato.png").
+                setDirectoryName("images").
+                load();
+
+        int i = bitmap.getHeight();
+        ImageView image = (ImageView) findViewById(R.id.ivTeste);
+
+        image.setImageBitmap(Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(),
+                bitmap.getHeight(), false));
+
+
+        //Set Firebase Storage
+        mStorageRef = mStorage.getReferenceFromUrl(getString(R.string.firebase_storage_url));
+
+        //getPlantList();
+        //getImagesFromFirebase();
+
 
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -129,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        mAuth.signInAnonymously()
+/*        mAuth.signInAnonymously()
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
@@ -146,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
 
                         // ...
                     }
-                });
+                });*/
 
     }
 
@@ -221,6 +267,71 @@ public class MainActivity extends AppCompatActivity {
                 int i = 0;
             }
         });
+    }
+
+    @Background
+    protected void getPlantList() {
+        mDatabase.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlantList)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        for (DataSnapshot data : dataSnapshot.getChildren()) {
+                            PlantModel item = data.getValue(PlantModel.class);
+
+                            PlantModel plant = new PlantModel();
+                            plant.setPlantName(item.getPlantName());
+                            plant.setPlantImage(item.getPlantImage());
+
+                            mPlantList.add(plant);
+                        }
+
+                        getImagesFromFirebase();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        //TODO tratar erros
+                    }
+                });
+    }
+
+    private void getImagesFromFirebase() {
+        final long ONE_MEGABYTE = 1024 * 1024;
+
+        for (final PlantModel plant : mPlantList) {
+            StorageReference imagesRef = mStorageRef.child(getString(R.string.folder_images));
+            imagesRef = imagesRef.child(plant.getPlantImage());
+
+            imagesRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                @Override
+                public void onSuccess(byte[] bytes) {
+                    // Data for "images/island.jpg" is returns, use this as needed
+                    int i = 0;
+
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    new ImageHelper(getApplicationContext()).
+                            setFileName(plant.getPlantImage()).
+                            setDirectoryName("images").
+                            save(bitmap);
+
+                    //keep image in a array
+                    mImageList.add(BitmapFactory.decodeResource(getResources(),
+                            getResources().getIdentifier("itm" + i, "drawable", getPackageName())));
+
+/*                    ImageView image = (ImageView) findViewById(R.id.ivIcon);
+
+                    image.setImageBitmap(Bitmap.createScaledBitmap(bmp, image.getWidth(),
+                            image.getHeight(), false));*/
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    //TODO Handle any errors
+                    int i = 0;
+                }
+            });
+        }
+
     }
 
     @Click
