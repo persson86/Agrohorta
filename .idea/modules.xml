@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Agrohorta.iml" filepath="$PROJECT_DIR$/Agrohorta.iml" />
+      <module fileurl="file://$PROJECT_DIR$/AgrohortaGithub.iml" filepath="$PROJECT_DIR$/AgrohortaGithub.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
