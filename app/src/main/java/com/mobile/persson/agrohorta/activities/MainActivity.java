@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mStorage = FirebaseStorage.getInstance();
 
-
+//teste new branch
         Bitmap bitmap = new ImageHelper(getApplicationContext()).
                 setFileName("tomato.png").
                 setDirectoryName("images").
