@@ -17,7 +17,7 @@
         <activity android:name=".activities.ProfileActivity_" />
         <activity android:name=".activities.RegisterPlantActivity_" />
         <activity android:name=".activities.RegisterPlantRelationActivity_" />
-        <activity android:name=".activities.MenuInterfaceActivity_">
+        <activity android:name=".activities.LauncherMenuActivity_">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

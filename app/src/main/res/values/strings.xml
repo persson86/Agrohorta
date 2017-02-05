@@ -6,9 +6,6 @@
     //Facebook
     <string name="facebook_app_id">480409765463045</string>
 
-    <string name="register_plant_title_en">Plant</string>
-    <string name="register_plant_title_pt">Planta</string>
-
     <string name="node_database">database</string>
     <string name="node_plant_list">plant_list</string>
     <string name="node_language">language_</string>

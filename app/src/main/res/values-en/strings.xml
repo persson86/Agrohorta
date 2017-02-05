@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="register_plant_title">Plant</string>
+
+    <string name="wait">Wait</string>
+    <string name="getting_data">Getting data</string>
+
+    <string name="list_of_plants">List of Plants</string>
+</resources>
