@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @EActivity(R.layout.activity_main)
@@ -63,10 +64,12 @@ public class MainActivity extends AppCompatActivity {
     private String mNodeLanguage;
     private String mNodePlantList;
 
-    private boolean isOk = false;
+    private HashMap<byte[], PlantModel> hashMap = new HashMap<>();
 
     private final static String TAG = "LFSP_DEBUG";
     private final long ONE_MEGABYTE = 1024 * 1024;
+
+    int count = 0;
 
     @Bean
     ConfigApp configApp;
@@ -95,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
         startDialog();
         configFirebase();
         loadToolbar();
+        //execBackgroundTasks();
         getPlantList();
 
  /*       while (bmpList.size() == 0){
@@ -168,7 +172,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Background(serial = "test")
-    protected void getPlantList() {
+    public void execBackgroundTasks() {
+        getPlantList();
+        //getImagesFromFirebase();
+        //getImageFromDevice();
+        //saveImagesToDevice();
+        //getImageFromDevice();
+        //showImages();
+    }
+
+    @Background(serial = "test")
+    public void getPlantList() {
         mPlantList = new ArrayList<>();
         mDatabaseRef.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlantList)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -192,48 +206,55 @@ public class MainActivity extends AppCompatActivity {
     public void getImagesFromFirebase() {
         StorageReference imageRef = mStorageRef.child(getString(R.string.folder_images));
 
+
         for (final PlantModel plant : mPlantList) {
             imageRef = imageRef.child(plant.getPlantImage());
             imageRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
                 @Override
                 public void onSuccess(byte[] bytes) {
-                    saveImageToDevice(bytes, plant);
-
-/*
-                    int i = 0;
-                    mImageList.add(BitmapFactory.decodeResource(getResources(),
-                            getResources().getIdentifier("itm" + i, "drawable", getPackageName())));
-*/
-
-/*                    ImageView image = (ImageView) findViewById(R.id.ivIcon);
-
-                    image.setImageBitmap(Bitmap.createScaledBitmap(bmp, image.getWidth(),
-                            image.getHeight(), false));*/
+                    //saveImageToDevice(bytes, plant);
+                    hashMap.put(bytes, plant);
+                    count += 1;
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception exception) {
                     //TODO Handle any errors
                     int i = 0;
+                    count += 1;
                 }
             });
         }
 
-        getImageFromDevice();
+        while (count != mPlantList.size()) {
+            continue;
+        }
 
+        saveImagesToDevice();
+        //getImageFromDevice();
+
+    }
+
+    @Background(serial = "test")
+    public void saveImagesToDevice() {
+        for (HashMap.Entry<byte[], PlantModel> map : hashMap.entrySet()) {
+            saveImageToDevice(map.getKey(), map.getValue());
+        }
+
+        getImageFromDevice();
     }
 
     @Background(serial = "test")
     public void saveImageToDevice(byte[] bytes, PlantModel plant) {
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-/*        new ImageHelper(getApplicationContext()).
+        new ImageHelper(getApplicationContext()).
                 setFileName(plant.getPlantImage()).
                 setDirectoryName(getString(R.string.folder_images)).
-                save(bitmap);*/
-        try {
+                save(bitmap);
+/*        try {
             File newfile = savebitmap(bitmap, plant.getPlantImage());
         } catch (Exception e) {
-        }
+        }*/
 
     }
 
@@ -274,8 +295,9 @@ public class MainActivity extends AppCompatActivity {
 
         int i = 0;
         for (Bitmap b : bmpList) {
-            if (b == null)
+            if (b == null) {
                 continue;
+            }
 
             if (i == 0) {
                 ivTeste.setImageBitmap(Bitmap.createScaledBitmap(b, b.getWidth(),
@@ -317,12 +339,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Click
+/*    @Click
     void ivProfile() {
         LoginActivity_.intent(getApplicationContext())
                 .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .start();
-    }
+    }*/
 
     public static File savebitmap(Bitmap bmp, String name) throws IOException {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
