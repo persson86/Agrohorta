@@ -4,17 +4,23 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.support.annotation.NonNull;
-import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-//import com.facebook.FacebookSdk;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -28,11 +34,16 @@ import com.mobile.persson.agrohorta.utils.ImageHelper;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
+import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +51,8 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     private DatabaseReference mDatabaseRef;
     private StorageReference mStorageRef;
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
 
     private ProgressDialog mProgressDialog;
     private List<PlantModel> mPlantList;
@@ -103,6 +116,44 @@ public class MainActivity extends AppCompatActivity {
     private void configFirebase() {
         setFirebaseReferences();
         setFirebaseNodes();
+
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+            }
+        };
+    }
+
+    private void setFirebaseReferences() {
+        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
+        mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl(getString(R.string.firebase_storage_url));
+        mAuth = FirebaseAuth.getInstance();
+
+        mAuth.signInAnonymously()
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.d(TAG, "signInAnonymously:onComplete:" + task.isSuccessful());
+
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "signInAnonymously", task.getException());
+                            Toast.makeText(getApplicationContext(), "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
     }
 
     private void setFirebaseNodes() {
@@ -111,17 +162,12 @@ public class MainActivity extends AppCompatActivity {
         mNodeLanguage = getString(R.string.node_language) + configApp.getLanguageDevice();
     }
 
-    private void setFirebaseReferences() {
-        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
-        mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl(getString(R.string.firebase_storage_url));
-    }
-
     private void loadToolbar() {
         setSupportActionBar(toolbar);
         tvToolbarTitle.setText(getString(R.string.list_of_plants));
     }
 
-    @Background
+    @Background(serial = "test")
     protected void getPlantList() {
         mPlantList = new ArrayList<>();
         mDatabaseRef.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlantList)
@@ -142,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    @Background
+    @Background(serial = "test")
     public void getImagesFromFirebase() {
         StorageReference imageRef = mStorageRef.child(getString(R.string.folder_images));
 
@@ -177,15 +223,21 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void saveImageToDevice(byte[] bytes, PlantModel plant) {
+    @Background(serial = "test")
+    public void saveImageToDevice(byte[] bytes, PlantModel plant) {
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        new ImageHelper(getApplicationContext()).
+/*        new ImageHelper(getApplicationContext()).
                 setFileName(plant.getPlantImage()).
                 setDirectoryName(getString(R.string.folder_images)).
-                save(bitmap);
+                save(bitmap);*/
+        try {
+            File newfile = savebitmap(bitmap, plant.getPlantImage());
+        } catch (Exception e) {
+        }
+
     }
 
-    @Background
+    @Background(serial = "test")
     public void getImageFromDevice() {
 
         int index = 0;
@@ -199,13 +251,14 @@ public class MainActivity extends AppCompatActivity {
 
             bmpList.add(index, bitmap);
 
-            if (index == 0) {
-                ivTeste.setImageBitmap(Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(),
-                        bitmap.getHeight(), false));
-            } else {
-                ivTeste2.setImageBitmap(Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(),
-                        bitmap.getHeight(), false));
-            }
+            //if (index == 0) {
+            //ivTeste.setImageResource(R.drawable.ic_account_circle_white_48dp);
+/*                ivTeste.setImageBitmap(Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(),
+                        bitmap.getHeight(), false));*/
+            //} else {
+            //ivTeste2.setImageBitmap(Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(),
+            //bitmap.getHeight(), false));
+            //}
 
             index += 1;
 
@@ -213,12 +266,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         int i = 0;
+        showImages();
     }
 
     @UiThread
-    private void showImages() {
+    public void showImages() {
+
         int i = 0;
         for (Bitmap b : bmpList) {
+            if (b == null)
+                continue;
+
             if (i == 0) {
                 ivTeste.setImageBitmap(Bitmap.createScaledBitmap(b, b.getWidth(),
                         b.getHeight(), false));
@@ -229,7 +287,9 @@ public class MainActivity extends AppCompatActivity {
 
             i += 1;
         }
+
     }
+
 
     private void teste() {
         StorageReference imagesRef = mStorageRef.child("images");
@@ -262,5 +322,31 @@ public class MainActivity extends AppCompatActivity {
         LoginActivity_.intent(getApplicationContext())
                 .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .start();
+    }
+
+    public static File savebitmap(Bitmap bmp, String name) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.JPEG, 60, bytes);
+        File f = new File(Environment.getExternalStorageDirectory()
+                + File.separator + name);
+        f.createNewFile();
+        FileOutputStream fo = new FileOutputStream(f);
+        fo.write(bytes.toByteArray());
+        fo.close();
+        return f;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
     }
 }
