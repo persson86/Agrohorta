@@ -1,11 +1,15 @@
 package com.mobile.persson.agrohorta.activities;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -36,7 +40,6 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.Bean;
-import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 
@@ -96,8 +99,8 @@ public class MainActivity extends AppCompatActivity {
     @AfterViews
     void initialize() {
         startDialog();
-        configFirebase();
         loadToolbar();
+        configFirebase();
         //execBackgroundTasks();
         getPlantList();
 
@@ -115,6 +118,11 @@ public class MainActivity extends AppCompatActivity {
         mProgressDialog.setTitle(getString(R.string.wait));
         mProgressDialog.setMessage(getString(R.string.getting_data));
         mProgressDialog.show();
+    }
+
+    private void loadToolbar() {
+        setSupportActionBar(toolbar);
+        tvToolbarTitle.setText(getString(R.string.list_of_plants));
     }
 
     private void configFirebase() {
@@ -166,11 +174,6 @@ public class MainActivity extends AppCompatActivity {
         mNodeLanguage = getString(R.string.node_language) + configApp.getLanguageDevice();
     }
 
-    private void loadToolbar() {
-        setSupportActionBar(toolbar);
-        tvToolbarTitle.setText(getString(R.string.list_of_plants));
-    }
-
     @Background(serial = "test")
     public void execBackgroundTasks() {
         getPlantList();
@@ -204,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Background(serial = "test")
     public void getImagesFromFirebase() {
-        StorageReference imageRef = mStorageRef.child(getString(R.string.folder_images));
+        StorageReference imageRef = mStorageRef.child(getString(R.string.node_folder_images));
 
 
         for (final PlantModel plant : mPlantList) {
@@ -249,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         new ImageHelper(getApplicationContext()).
                 setFileName(plant.getPlantImage()).
-                setDirectoryName(getString(R.string.folder_images)).
+                setDirectoryName(getString(R.string.node_folder_images)).
                 save(bitmap);
 /*        try {
             File newfile = savebitmap(bitmap, plant.getPlantImage());
@@ -266,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
         for (PlantModel plant : mPlantList) {
             Bitmap bitmap = new ImageHelper(getApplicationContext()).
                     setFileName(plant.getPlantImage()).
-                    setDirectoryName(getString(R.string.folder_images)).
+                    setDirectoryName(getString(R.string.node_folder_images)).
                     load();
 
 
@@ -362,6 +365,7 @@ public class MainActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
+        LocalBroadcastManager.getInstance(this).registerReceiver(MyReceiver, new IntentFilter(getString(R.string.service_plant_list)));
     }
 
     @Override
@@ -370,5 +374,60 @@ public class MainActivity extends AppCompatActivity {
         if (mAuthListener != null) {
             mAuth.removeAuthStateListener(mAuthListener);
         }
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(MyReceiver);
     }
+
+    //region BroadCastReceiver
+    private BroadcastReceiver MyReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            /*ArrayList<String> compListAux = new ArrayList<String>();
+            ArrayList<String> antaListAux = new ArrayList<String>();
+            ArrayList<String> compKeyListAux = new ArrayList<String>();
+            ArrayList<String> antaKeyListAux = new ArrayList<String>();
+
+            String step = intent.getStringExtra("step");
+
+            switch (step) {
+                case "2":
+                    compKeyListAux = intent.getStringArrayListExtra("compKeyList");
+                    antaKeyListAux = intent.getStringArrayListExtra("antaKeyList");
+
+                    for (String line : compKeyListAux) {
+                        compKeyList.add(line);
+                    }
+                    for (String line : antaKeyListAux) {
+                        antaKeyList.add(line);
+                    }
+
+                    Intent intent2 = new Intent(getApplicationContext(), MyService.class);
+                    intent2.putExtra("id", 2);
+                    intent2.putStringArrayListExtra("compKeyList", compKeyList);
+                    startService(intent2);
+                    break;
+                case "3":
+                    compListAux = intent.getStringArrayListExtra("compList");
+
+                    for (String line : compListAux) {
+                        compList.add(line);
+                    }
+
+                    Intent intent3 = new Intent(getApplicationContext(), MyService.class);
+                    intent3.putExtra("id", 3);
+                    intent3.putStringArrayListExtra("antaKeyList", antaKeyList);
+                    startService(intent3);
+                    break;
+                case "DONE":
+                    antaListAux = intent.getStringArrayListExtra("antaList");
+
+                    for (String line : antaListAux) {
+                        antaList.add(line);
+                    }
+                    progressDialog.dismiss();
+                    mergeLists(null);
+                    break;
+            }*/
+        }
+    };
+    //endregion
 }
