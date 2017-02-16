@@ -33,7 +33,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.mobile.persson.agrohorta.R;
-import com.mobile.persson.agrohorta.models.PlantModel;
+import com.mobile.persson.agrohorta.database.dao.PlantsDAO;
+import com.mobile.persson.agrohorta.database.models.PlantModel;
+import com.mobile.persson.agrohorta.services.PlantListService;
 import com.mobile.persson.agrohorta.utils.ImageHelper;
 
 import org.androidannotations.annotations.AfterViews;
@@ -76,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Bean
     ConfigApp configApp;
+    @Bean
+    PlantsDAO plantsDAO;
+
     @ViewById
     Toolbar toolbar;
     @ViewById
@@ -100,15 +105,13 @@ public class MainActivity extends AppCompatActivity {
     void initialize() {
         startDialog();
         loadToolbar();
-        configFirebase();
+        //configFirebase();
         //execBackgroundTasks();
-        getPlantList();
-
- /*       while (bmpList.size() == 0){
-        }*/
-
-        //showImages();
-        //teste();
+        //getPlantList();
+        android.os.Debug.waitForDebugger();
+        Intent intent2 = new Intent(getApplicationContext(), PlantListService.class);
+        intent2.putExtra("STEP_PROCESS", "GET_PLANT_LIST");
+        startService(intent2);
 
         mProgressDialog.dismiss();
     }
@@ -364,7 +367,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        mAuth.addAuthStateListener(mAuthListener);
+//        mAuth.addAuthStateListener(mAuthListener);
         LocalBroadcastManager.getInstance(this).registerReceiver(MyReceiver, new IntentFilter(getString(R.string.service_plant_list)));
     }
 
@@ -381,52 +384,14 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver MyReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            /*ArrayList<String> compListAux = new ArrayList<String>();
-            ArrayList<String> antaListAux = new ArrayList<String>();
-            ArrayList<String> compKeyListAux = new ArrayList<String>();
-            ArrayList<String> antaKeyListAux = new ArrayList<String>();
+            String stepProcess = intent.getStringExtra("STEP_PROCESS");
 
-            String step = intent.getStringExtra("step");
-
-            switch (step) {
-                case "2":
-                    compKeyListAux = intent.getStringArrayListExtra("compKeyList");
-                    antaKeyListAux = intent.getStringArrayListExtra("antaKeyList");
-
-                    for (String line : compKeyListAux) {
-                        compKeyList.add(line);
-                    }
-                    for (String line : antaKeyListAux) {
-                        antaKeyList.add(line);
-                    }
-
-                    Intent intent2 = new Intent(getApplicationContext(), MyService.class);
-                    intent2.putExtra("id", 2);
-                    intent2.putStringArrayListExtra("compKeyList", compKeyList);
-                    startService(intent2);
-                    break;
-                case "3":
-                    compListAux = intent.getStringArrayListExtra("compList");
-
-                    for (String line : compListAux) {
-                        compList.add(line);
-                    }
-
-                    Intent intent3 = new Intent(getApplicationContext(), MyService.class);
-                    intent3.putExtra("id", 3);
-                    intent3.putStringArrayListExtra("antaKeyList", antaKeyList);
-                    startService(intent3);
-                    break;
+            switch (stepProcess) {
                 case "DONE":
-                    antaListAux = intent.getStringArrayListExtra("antaList");
-
-                    for (String line : antaListAux) {
-                        antaList.add(line);
-                    }
-                    progressDialog.dismiss();
-                    mergeLists(null);
+                    mPlantList = plantsDAO.getPlants();
+                    int i = 0;
                     break;
-            }*/
+            }
         }
     };
     //endregion

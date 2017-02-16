@@ -29,6 +29,11 @@
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
 
+        <service
+            android:name=".services.PlantListService_"
+            android:enabled="true"
+            android:exported="false" />
+
     </application>
 
 </manifest>
