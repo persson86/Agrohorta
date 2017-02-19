@@ -20,16 +20,17 @@ import com.mobile.persson.agrohorta.R;
 import com.mobile.persson.agrohorta.activities.ConfigApp;
 import com.mobile.persson.agrohorta.database.dao.PlantsDAO;
 import com.mobile.persson.agrohorta.database.models.PlantModel;
+import com.mobile.persson.agrohorta.database.models.PlantModelRealm;
 
 import org.androidannotations.annotations.Bean;
-import org.androidannotations.annotations.EService;
+import org.androidannotations.annotations.EIntentService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@EService
+@EIntentService
 public class PlantListService extends IntentService {
     private DatabaseReference mDatabaseRef;
     private StorageReference mStorageRef;
@@ -40,7 +41,7 @@ public class PlantListService extends IntentService {
     private String mNodeLanguage;
     private String mNodePlantList;
 
-    private Intent myIntent = new Intent(getString(R.string.service_plant_list));
+    private Intent myIntent = new Intent("service_plant_list");
 
     private static final String STEP_PROCESS = "STEP_PROCESS";
     private static final String GET_PLANT_LIST = "GET_PLANT_LIST";
@@ -50,7 +51,7 @@ public class PlantListService extends IntentService {
     private static final String GET_IMAGE_FROM_DEVICE = "GET_IMAGE_FROM_DEVICE";
     private final long ONE_MEGABYTE = 1024 * 1024;
 
-    private List<PlantModel> mPlants;
+    private List<PlantModelRealm> mPlants;
     private HashMap<byte[], PlantModel> mHashMap = new HashMap<>();
 
     @Bean
@@ -64,7 +65,7 @@ public class PlantListService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        setFirebaseInstance();
 
         String stepProcess = intent.getStringExtra(STEP_PROCESS);
         switch (stepProcess) {
@@ -83,7 +84,8 @@ public class PlantListService extends IntentService {
         }
     }
 
-    private void getPlantsList() {
+    private void setFirebaseInstance() {
+        mDatabase = FirebaseDatabase.getInstance().getReference();
         mDatabaseRef = FirebaseDatabase.getInstance().getReference();
         mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl(getString(R.string.firebase_storage_url));
         mAuth = FirebaseAuth.getInstance();
@@ -91,19 +93,24 @@ public class PlantListService extends IntentService {
         mNodeDatabase = getString(R.string.node_database);
         mNodePlantList = getString(R.string.node_plant_list);
         mNodeLanguage = getString(R.string.node_language) + configApp.getLanguageDevice();
+    }
 
+    private void getPlantsList() {
         mPlants = new ArrayList<>();
         mDatabaseRef.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlantList)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         for (DataSnapshot data : dataSnapshot.getChildren()) {
-                            PlantModel plant = data.getValue(PlantModel.class);
+                            PlantModel receivePlant = data.getValue(PlantModel.class);
+                            PlantModelRealm plant = new PlantModelRealm();
+                            plant.setPlantName(receivePlant.getPlantName());
+                            plant.setPlantImage(receivePlant.getPlantImage());
                             mPlants.add(plant);
                         }
 
                         plantsDAO.savePlants(mPlants);
-                        callNextStep("DONE");
+                        callNextStep(GET_IMAGES_FROM_STORAGE);
                         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(myIntent);
                     }
 
@@ -120,7 +127,9 @@ public class PlantListService extends IntentService {
         final AtomicInteger index = new AtomicInteger();
         index.set(0);
 
-        for (final PlantModel plant : mPlants) {
+        mPlants = plantsDAO.getPlants();
+
+        for (final PlantModelRealm plant : mPlants) {
             if (plant.equals(""))
                 continue;
 
@@ -145,6 +154,8 @@ public class PlantListService extends IntentService {
         while (mPlants.size() != index.get()) {
             continue;
         }
+
+        callNextStep("DONE");
     }
 
     private void callNextStep(String stepProcess) {

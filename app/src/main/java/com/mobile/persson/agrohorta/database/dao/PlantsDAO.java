@@ -3,8 +3,7 @@ package com.mobile.persson.agrohorta.database.dao;
 import android.content.Context;
 
 import com.mobile.persson.agrohorta.database.DatabaseHelper;
-import com.mobile.persson.agrohorta.database.models.PlantModel;
-//import com.mobile.persson.agrohorta.database.models.AnswerItemModel;
+import com.mobile.persson.agrohorta.database.models.PlantModelRealm;
 
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.EBean;
@@ -23,19 +22,19 @@ public class PlantsDAO {
     @Bean
     DatabaseHelper dbHelper;
 
-    public void savePlants(List<PlantModel> model) {
+    public void savePlants(List<PlantModelRealm> model) {
         Realm realm = dbHelper.getRealm();
         realm.beginTransaction();
-        realm.where(PlantModel.class).findAll().deleteAllFromRealm();
+        realm.where(PlantModelRealm.class).findAll().deleteAllFromRealm();
         realm.commitTransaction();
         realm.beginTransaction();
         realm.copyToRealm(model);
         realm.commitTransaction();
     }
 
-    public List<PlantModel> getPlants() {
+    public List<PlantModelRealm> getPlants() {
         Realm realm = dbHelper.getRealm();
-        RealmResults<PlantModel> result = realm.where(PlantModel.class).findAll();
+        RealmResults<PlantModelRealm> result = realm.where(PlantModelRealm.class).findAll();
         return result;
     }
 }

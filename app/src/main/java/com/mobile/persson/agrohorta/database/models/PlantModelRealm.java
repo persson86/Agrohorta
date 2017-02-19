@@ -1,13 +1,15 @@
 package com.mobile.persson.agrohorta.database.models;
 
-public class PlantModel {
+import io.realm.RealmObject;
+
+public class PlantModelRealm extends RealmObject {
     private String plantName;
     private String plantImage;
 
-    public PlantModel() {
+    public PlantModelRealm() {
     }
 
-    public PlantModel(String name, String image) {
+    public PlantModelRealm(String name, String image) {
         this.plantName = name;
         this.plantImage = image;
     }
