@@ -7,18 +7,12 @@
     android:orientation="vertical"
     tools:context="com.mobile.persson.agrohorta.activities.MainActivity">
 
-    <include layout="@layout/fragment_toolbar"/>
+    <include layout="@layout/fragment_toolbar" />
 
-    <ImageView
-        android:layout_marginTop="30dp"
-        android:id="@+id/ivTeste"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <ImageView
-        android:layout_marginTop="30dp"
-        android:id="@+id/ivTeste2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical" />
 
 </LinearLayout>
