@@ -36,7 +36,7 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentAdapter.GridItem
 
     @Override
     public GridItemViewHolder onCreateViewHolder(ViewGroup parent, int position) {
-        View itemView = LayoutInflater.from(context).inflate(R.layout.plant_item, parent, false);
+        View itemView = LayoutInflater.from(context).inflate(R.layout.plant_row, parent, false);
         return new GridItemViewHolder(itemView, this);
     }
 

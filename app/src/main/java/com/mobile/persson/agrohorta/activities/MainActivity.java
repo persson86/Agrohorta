@@ -8,9 +8,12 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -21,6 +24,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.mobile.persson.agrohorta.R;
 import com.mobile.persson.agrohorta.adapters.ContentAdapter;
 import com.mobile.persson.agrohorta.database.dao.PlantsDAO;
@@ -38,7 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @EActivity(R.layout.activity_main)
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
     private DatabaseReference mDatabaseRef;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -50,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private String mNodePlants;
 
     private List<PlantModelRealm> mPlants;
+    private long plantsCount;
 
     @Bean
     ConfigApp configApp;
@@ -62,6 +68,10 @@ public class MainActivity extends AppCompatActivity {
     TextView tvToolbarTitle;
     @ViewById
     RecyclerView content;
+    @ViewById
+    ImageView ivPlantImage;
+    @ViewById
+    TextView tvPlantName;
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -152,7 +162,8 @@ public class MainActivity extends AppCompatActivity {
         if (mPlants.isEmpty()) {
             getPlantsList();
         } else {
-            setContentAdapter();
+            getPlantsListCount();
+            //setContentAdapter();
         }
     }
 
@@ -173,6 +184,31 @@ public class MainActivity extends AppCompatActivity {
 
                         plantsDAO.savePlants(mPlants);
                         setContentAdapter();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        //TODO tratar erros
+                    }
+                });
+    }
+
+    @Background()
+    public void getPlantsListCount() {
+        mPlants = new ArrayList<>();
+        mDatabaseRef.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlants)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        plantsCount = dataSnapshot.getChildrenCount();
+
+                        mPlants = new ArrayList<>();
+                        mPlants = plantsDAO.getPlants();
+                        if (mPlants.size() != plantsCount){
+                            getPlantsList();
+                        }
+                        else
+                            setContentAdapter();
                     }
 
                     @Override
