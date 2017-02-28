@@ -2,30 +2,23 @@ package com.mobile.persson.agrohorta.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-//import com.facebook.FacebookSdk;
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserInfo;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -34,82 +27,51 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.mobile.persson.agrohorta.R;
-import com.mobile.persson.agrohorta.models.PlantModel;
-import com.mobile.persson.agrohorta.utils.ImageHelper;
-import com.mobile.persson.agrohorta.utils.StringHelper;
+import com.mobile.persson.agrohorta.adapters.ContentAdapter;
+import com.mobile.persson.agrohorta.database.dao.PlantsDAO;
+import com.mobile.persson.agrohorta.database.models.PlantModel;
+import com.mobile.persson.agrohorta.database.models.PlantModelRealm;
+import com.mobile.persson.agrohorta.services.PlantListService_;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Bean;
-import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.R.attr.bitmap;
-
 @EActivity(R.layout.activity_main)
-public class MainActivity extends AppCompatActivity {
-    private DatabaseReference mDatabase;
+public class MainActivity extends BaseActivity {
+    private DatabaseReference mDatabaseRef;
     private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthStateListener;
-    private GoogleApiClient mGoogleApiClient;
-
-    private ProgressDialog mProgressDialog;
-    private final static String TAG = "LFSP_DEBUG";
-    FirebaseStorage mStorage;
-    StorageReference mStorageRef;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
-    private String mDeviceLanguage;
+    private ProgressDialog mProgressDialog;
+
     private String mNodeDatabase;
     private String mNodeLanguage;
-    private String mNodePlantList;
+    private String mNodePlants;
 
-
-    private List<PlantModel> mPlantList = new ArrayList<>();
-    private List<Bitmap> mImageList = new ArrayList<>();
+    private List<PlantModelRealm> mPlants;
+    private long plantsCount;
 
     @Bean
     ConfigApp configApp;
+    @Bean
+    PlantsDAO plantsDAO;
+
     @ViewById
     Toolbar toolbar;
     @ViewById
     TextView tvToolbarTitle;
     @ViewById
-    de.hdodenhof.circleimageview.CircleImageView ivProfile;
-
-    @AfterViews
-    void initialize() {
-
-        startDialog();
-        initializeFirebase();
-        setAuthStateListener();
-        googleAuthConfig();
-        loadToolbar();
-
-        //FacebookSdk.sdkInitialize(getApplicationContext());
-
-        //teste();
-
-        mProgressDialog.dismiss();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            UserInfo user = FirebaseAuth.getInstance().getCurrentUser();
-            loadImageProfile(user.getPhotoUrl());
-            Toast.makeText(this, user.getDisplayName(), Toast.LENGTH_SHORT).show();
-        } else
-            ivProfile.setImageResource(R.drawable.ic_account_circle_white_48dp);
-    }
+    RecyclerView content;
+    @ViewById
+    ImageView ivPlantImage;
+    @ViewById
+    TextView tvPlantName;
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -122,170 +84,106 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void loadToolbar() {
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        tvToolbarTitle.setText("Catálogo de plantas");
+    @AfterViews
+    void initialize() {
+        startDialog();
+        loadToolbar();
+        configFirebase();
+        setPlants();
     }
 
-    private void initializeFirebase() {
-        //set Firebase nodes
-        mNodeDatabase = getString(R.string.node_database);
-        mNodePlantList = getString(R.string.node_plant_list);
-        mNodeLanguage = getString(R.string.node_language) + configApp.getLanguageDevice();
+    private void startDialog() {
+        mProgressDialog = new ProgressDialog(MainActivity.this);
+        mProgressDialog.setTitle(getString(R.string.wait));
+        mProgressDialog.setMessage(getString(R.string.getting_data));
+        mProgressDialog.show();
+    }
 
-        //set Firebase references
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        mAuth = FirebaseAuth.getInstance();
-        mStorage = FirebaseStorage.getInstance();
+    private void loadToolbar() {
+        setSupportActionBar(toolbar);
+        tvToolbarTitle.setText(getString(R.string.list_of_plants));
+    }
 
+    @Background
+    public void callIntentService(String step) {
+        Intent it = new Intent(getApplicationContext(), PlantListService_.class);
+        it.putExtra("STEP_PROCESS", step);
+        startService(it);
+    }
 
-        Bitmap bitmap = new ImageHelper(getApplicationContext()).
-                setFileName("tomato.png").
-                setDirectoryName("images").
-                load();
-
-        int i = bitmap.getHeight();
-        ImageView image = (ImageView) findViewById(R.id.ivTeste);
-
-        image.setImageBitmap(Bitmap.createScaledBitmap(bitmap, bitmap.getWidth(),
-                bitmap.getHeight(), false));
-
-
-        //Set Firebase Storage
-        mStorageRef = mStorage.getReferenceFromUrl(getString(R.string.firebase_storage_url));
-
-        //getPlantList();
-        //getImagesFromFirebase();
-
+    private void configFirebase() {
+        setFirebaseReferences();
+        setFirebaseNodes();
 
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
-                    // User is signed in
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                 } else {
-                    // User is signed out
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
-                // ...
             }
         };
+    }
 
-/*        mAuth.signInAnonymously()
+    private void setFirebaseReferences() {
+        mDatabaseRef = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
+
+        mAuth.signInAnonymously()
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d(TAG, "signInAnonymously:onComplete:" + task.isSuccessful());
+                        //Log.d(TAG, "signInAnonymously:onComplete:" + task.isSuccessful());
 
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
                         if (!task.isSuccessful()) {
-                            Log.w(TAG, "signInAnonymously", task.getException());
+                            //Log.w(TAG, "signInAnonymously", task.getException());
                             Toast.makeText(getApplicationContext(), "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                         }
-
-                        // ...
                     }
-                });*/
+                });
 
     }
 
-    private void googleAuthConfig() {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build();
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, new GoogleApiClient.OnConnectionFailedListener() {
-                    @Override
-                    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-                    }
-                })
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
+    private void setFirebaseNodes() {
+        mNodeDatabase = getString(R.string.node_database);
+        mNodePlants = getString(R.string.node_plant_list);
+        mNodeLanguage = getString(R.string.node_language) + configApp.getLanguageDevice();
     }
 
-    private void setAuthStateListener() {
-        mAuth = FirebaseAuth.getInstance();
-        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
-                    if (user.getDisplayName() != null)
-                        Toast.makeText(getApplicationContext(), user.getDisplayName(), Toast.LENGTH_SHORT).show();
-                } else {
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
-                }
-            }
-        };
+    private void setPlants() {
+        mPlants = new ArrayList<>();
+        mPlants = plantsDAO.getPlants();
+
+        if (mPlants.isEmpty()) {
+            getPlantsList();
+        } else {
+            getPlantsListCount();
+            //setContentAdapter();
+        }
     }
 
-    private void startDialog() {
-        mProgressDialog = new ProgressDialog(MainActivity.this);
-        mProgressDialog.setTitle("buscando data");
-        mProgressDialog.setMessage("aguarde");
-        mProgressDialog.show();
-    }
-
-    private void loadImageProfile(Uri url) {
-        Glide.with(ivProfile.getContext())
-                .load(url)
-                .into(ivProfile);
-    }
-
-    private void teste() {
-        StorageReference imagesRef = mStorageRef.child("images");
-        imagesRef = imagesRef.child("onion.png");
-
-        final long ONE_MEGABYTE = 1024 * 1024;
-        imagesRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-            @Override
-            public void onSuccess(byte[] bytes) {
-                // Data for "images/island.jpg" is returns, use this as needed
-                int i = 0;
-
-                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                ImageView image = (ImageView) findViewById(R.id.ivIcon);
-
-                image.setImageBitmap(Bitmap.createScaledBitmap(bmp, image.getWidth(),
-                        image.getHeight(), false));
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle any errors
-                int i = 0;
-            }
-        });
-    }
-
-    @Background
-    protected void getPlantList() {
-        mDatabase.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlantList)
+    @Background()
+    public void getPlantsList() {
+        mPlants = new ArrayList<>();
+        mDatabaseRef.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlants)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         for (DataSnapshot data : dataSnapshot.getChildren()) {
-                            PlantModel item = data.getValue(PlantModel.class);
-
-                            PlantModel plant = new PlantModel();
-                            plant.setPlantName(item.getPlantName());
-                            plant.setPlantImage(item.getPlantImage());
-
-                            mPlantList.add(plant);
+                            PlantModel receivePlant = data.getValue(PlantModel.class);
+                            PlantModelRealm plant = new PlantModelRealm();
+                            plant.setPlantName(receivePlant.getPlantName());
+                            plant.setPlantImage(receivePlant.getPlantImage());
+                            mPlants.add(plant);
                         }
 
-                        getImagesFromFirebase();
+                        plantsDAO.savePlants(mPlants);
+                        setContentAdapter();
                     }
 
                     @Override
@@ -295,56 +193,38 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void getImagesFromFirebase() {
-        final long ONE_MEGABYTE = 1024 * 1024;
+    @Background()
+    public void getPlantsListCount() {
+        mPlants = new ArrayList<>();
+        mDatabaseRef.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlants)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        plantsCount = dataSnapshot.getChildrenCount();
 
-        for (final PlantModel plant : mPlantList) {
-            StorageReference imagesRef = mStorageRef.child(getString(R.string.folder_images));
-            imagesRef = imagesRef.child(plant.getPlantImage());
+                        mPlants = new ArrayList<>();
+                        mPlants = plantsDAO.getPlants();
+                        if (mPlants.size() != plantsCount){
+                            getPlantsList();
+                        }
+                        else
+                            setContentAdapter();
+                    }
 
-            imagesRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                @Override
-                public void onSuccess(byte[] bytes) {
-                    // Data for "images/island.jpg" is returns, use this as needed
-                    int i = 0;
-
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                    new ImageHelper(getApplicationContext()).
-                            setFileName(plant.getPlantImage()).
-                            setDirectoryName("images").
-                            save(bitmap);
-
-                    //keep image in a array
-                    mImageList.add(BitmapFactory.decodeResource(getResources(),
-                            getResources().getIdentifier("itm" + i, "drawable", getPackageName())));
-
-/*                    ImageView image = (ImageView) findViewById(R.id.ivIcon);
-
-                    image.setImageBitmap(Bitmap.createScaledBitmap(bmp, image.getWidth(),
-                            image.getHeight(), false));*/
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    //TODO Handle any errors
-                    int i = 0;
-                }
-            });
-        }
-
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        //TODO tratar erros
+                    }
+                });
     }
 
-    @Click
-    void ivProfile() {
-        LoginActivity_.intent(getApplicationContext())
-                .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .start();
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        mAuth.addAuthStateListener(mAuthListener);
+    private void setContentAdapter() {
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(MainActivity.this, 3);
+        content.setLayoutManager(layoutManager);
+        content.setHasFixedSize(true);
+        ContentAdapter adapter = new ContentAdapter(getApplicationContext(), mPlants);
+        content.setAdapter(adapter);
+        mProgressDialog.dismiss();
     }
 
     @Override

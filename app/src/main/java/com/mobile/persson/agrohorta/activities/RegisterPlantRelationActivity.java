@@ -1,18 +1,14 @@
 package com.mobile.persson.agrohorta.activities;
 
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.mobile.persson.agrohorta.R;
-import com.mobile.persson.agrohorta.models.PlantModel;
 import com.mobile.persson.agrohorta.utils.StringHelper;
 
 import org.androidannotations.annotations.AfterViews;

@@ -13,7 +13,7 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 
 @EActivity(R.layout.activity_menu_interface)
-public class MenuInterfaceActivity extends AppCompatActivity {
+public class LauncherMenuActivity extends AppCompatActivity {
 
     @ViewById
     Button btRegisterPlant;

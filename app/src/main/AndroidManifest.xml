@@ -17,7 +17,7 @@
         <activity android:name=".activities.ProfileActivity_" />
         <activity android:name=".activities.RegisterPlantActivity_" />
         <activity android:name=".activities.RegisterPlantRelationActivity_" />
-        <activity android:name=".activities.MenuInterfaceActivity_">
+        <activity android:name=".activities.LauncherMenuActivity_">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,6 +28,11 @@
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
+
+        <service
+            android:name=".services.PlantListService_"
+            android:enabled="true"
+            android:exported="false" />
 
     </application>
 

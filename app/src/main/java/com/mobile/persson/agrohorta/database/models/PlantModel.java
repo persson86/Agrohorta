@@ -1,4 +1,4 @@
-package com.mobile.persson.agrohorta.models;
+package com.mobile.persson.agrohorta.database.models;
 
 public class PlantModel {
     private String plantName;
