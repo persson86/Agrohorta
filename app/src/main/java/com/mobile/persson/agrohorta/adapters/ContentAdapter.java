@@ -23,15 +23,13 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentAdapter.GridItem
     private Context context;
     private AdapterView.OnItemClickListener itemClickListener;
 
-    private StorageReference mStorageRef;
     private StorageReference mImageRef;
 
     public ContentAdapter(Context context, List<PlantModelRealm> plants) {
         this.mPlants = plants;
         this.context = context;
 
-        mStorageRef = FirebaseStorage.getInstance().getReferenceFromUrl("gs://agro-horta.appspot.com");
-        mImageRef = mStorageRef.child("images");
+        mImageRef = FirebaseStorage.getInstance().getReferenceFromUrl("gs://agro-horta.appspot.com").child("images");
     }
 
     @Override

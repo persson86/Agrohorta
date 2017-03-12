@@ -7,6 +7,8 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,6 +45,7 @@ public class MainActivity extends BaseActivity {
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
+    private ContentAdapter contentAdapter;
     private ProgressDialog mProgressDialog;
 
     private String mNodeDatabase;
@@ -50,6 +53,7 @@ public class MainActivity extends BaseActivity {
     private String mNodePlants;
 
     private List<PlantModelRealm> mPlants;
+    private List<String> mPlantsFiltered = new ArrayList<>();
     private long plantsCount;
 
     @Bean
@@ -114,9 +118,9 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
+    /*            if (user != null) {
                 } else {
-                }
+                }*/
             }
         };
     }
@@ -215,9 +219,24 @@ public class MainActivity extends BaseActivity {
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(MainActivity.this, 3);
         content.setLayoutManager(layoutManager);
         content.setHasFixedSize(true);
-        ContentAdapter adapter = new ContentAdapter(getApplicationContext(), mPlants);
-        content.setAdapter(adapter);
+        contentAdapter = new ContentAdapter(getApplicationContext(), mPlants);
+        content.setAdapter(contentAdapter);
         mProgressDialog.dismiss();
+
+        setPlantClickListener();
+    }
+
+    private void setPlantClickListener() {
+        contentAdapter.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                addPlantFiltered(mPlants.get(position).getPlantName());
+            }
+        });
+    }
+
+    private void addPlantFiltered(String plantName) {
+        mPlantsFiltered.add(plantName);
     }
 
     @Override

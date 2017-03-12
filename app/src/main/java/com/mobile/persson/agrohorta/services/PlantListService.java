@@ -44,7 +44,7 @@ public class PlantListService extends IntentService {
     private Intent myIntent = new Intent("service_plant_list");
 
     private static final String STEP_PROCESS = "STEP_PROCESS";
-    private static final String GET_PLANT_LIST = "GET_PLANT_LIST";
+    private static final String GET_PLANT_FILTERED_LIST = "GET_PLANT_FILTERED_LIST";
     private static final String GET_IMAGES_FROM_STORAGE = "GET_IMAGES_FROM_STORAGE";
     private static final String GET_IMAGES_FROM_DEVICE = "GET_IMAGES_FROM_DEVICE";
     private static final String SAVE_IMAGES_INTO_DEVICE = "SAVE_IMAGES_INTO_DEVICE";
@@ -69,8 +69,8 @@ public class PlantListService extends IntentService {
 
         String stepProcess = intent.getStringExtra(STEP_PROCESS);
         switch (stepProcess) {
-            case GET_PLANT_LIST:
-                getPlantsList();
+            case GET_PLANT_FILTERED_LIST:
+                getPlantFilteredList();
                 break;
             case GET_IMAGES_FROM_STORAGE:
                 getImagesFromStorage();
@@ -95,7 +95,38 @@ public class PlantListService extends IntentService {
         mNodeLanguage = getString(R.string.node_language) + configApp.getLanguageDevice();
     }
 
-    private void getPlantsList() {
+    private void getPlantFilteredList() {
+        /*mDatabaseRef.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlantList).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot Snapshot : dataSnapshot.getChildren()) {
+                    Catalogo c = Snapshot.getValue(Catalogo.class);
+
+                    String key = c.getKey();
+                    String tipo = c.getTipo();
+
+                    if (tipo.equals("C"))
+                        compKeyList.add(key);
+
+                    else
+                        antaKeyList.add(key);
+                }
+
+                Bundle extras = new Bundle();
+                extras.putString("step", "2");
+                extras.putStringArrayList("compKeyList", compKeyList);
+                extras.putStringArrayList("antaKeyList", antaKeyList);
+                myIntent.putExtras(extras);
+
+                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(myIntent);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });*/
+
+
         mPlants = new ArrayList<>();
         mDatabaseRef.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlantList)
                 .addListenerForSingleValueEvent(new ValueEventListener() {

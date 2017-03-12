@@ -40,7 +40,7 @@
     </RadioGroup>
 
     <Button
-        android:id="@+id/bt_register_relation"
+        android:id="@+id/bt_register_plant_relation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Register relationship" />
