@@ -42,19 +42,20 @@ public class RegisterPlantActivity extends AppCompatActivity {
 
     @Click
     void btRegisterPlant() {
-        logicaFirebase();
+        savePlant();
     }
 
     //TODO change method name
-    private void logicaFirebase() {
+    private void savePlant() {
         String deviceLanguage = configApp.getLanguageDevice();
-        String plantEn = stringHelper.formatInputPlant(etPlantEn.getText().toString());
+        String plantEn = etPlantEn.getText().toString();
         String plantImage = stringHelper.formatImageName(plantEn);
+        String plantNodeEn = stringHelper.formatInputPlant(plantEn);
 
         String nodeDatabase = "database";
         String nodeLanguage = "language_" + deviceLanguage;
         String nodePlantList = "plant_list";
-        String path = "/" + nodeDatabase + "/" + nodeLanguage + "/" + nodePlantList + "/" + plantEn;
+        String path = "/" + nodeDatabase + "/" + nodeLanguage + "/" + nodePlantList + "/" + plantNodeEn;
 
         Map<String, String> mapPlant = new HashMap<>();
         mapPlant.put("plantName", plantEn);
