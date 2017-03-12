@@ -48,8 +48,8 @@ public class RegisterPlantRelationActivity extends AppCompatActivity {
     @Click
     void btRegisterRelation() {
         String deviceLanguage = configApp.getLanguageDevice();
-        final String plant1 = stringHelper.formatInputPlant(etPlant1.getText().toString());
-        final String plant2 = stringHelper.formatInputPlant(etPlant2.getText().toString());
+        final String plant1 = stringHelper.convertToInputFormatNode(etPlant1.getText().toString());
+        final String plant2 = stringHelper.convertToInputFormatNode(etPlant2.getText().toString());
 
         String nodeDatabase = "database";
         String nodeLanguage = "language_" + deviceLanguage;

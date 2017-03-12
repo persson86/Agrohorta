@@ -4,11 +4,11 @@ import org.androidannotations.annotations.EBean;
 
 @EBean(scope = EBean.Scope.Singleton)
 public class StringHelper {
-    public String formatInputPlant(String inputPlant) {
+    public String convertToInputFormatNode(String inputPlant) {
         return inputPlant.replace(" ", "_");
     }
 
-    public String formatImageName(String plant) {
+    public String convertToInputFormatImage(String plant) {
         return plant + ".png";
     }
 }

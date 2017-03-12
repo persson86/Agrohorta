@@ -49,8 +49,8 @@ public class RegisterPlantActivity extends AppCompatActivity {
     private void savePlant() {
         String deviceLanguage = configApp.getLanguageDevice();
         String plantEn = etPlantEn.getText().toString();
-        String plantImage = stringHelper.formatImageName(plantEn);
-        String plantNodeEn = stringHelper.formatInputPlant(plantEn);
+        String plantNodeEn = stringHelper.convertToInputFormatNode(plantEn);
+        String plantImage = stringHelper.convertToInputFormatImage(plantNodeEn);
 
         String nodeDatabase = "database";
         String nodeLanguage = "language_" + deviceLanguage;
