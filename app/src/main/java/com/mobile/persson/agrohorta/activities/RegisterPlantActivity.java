@@ -10,6 +10,7 @@ import com.mobile.persson.agrohorta.R;
 import com.mobile.persson.agrohorta.utils.StringHelper;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
@@ -45,8 +46,8 @@ public class RegisterPlantActivity extends AppCompatActivity {
         savePlant();
     }
 
-    //TODO change method name
-    private void savePlant() {
+    @Background
+    public void savePlant() {
         String deviceLanguage = configApp.getLanguageDevice();
         String plantEn = etPlantEn.getText().toString();
         String plantNodeEn = stringHelper.convertToInputFormatNode(plantEn);
