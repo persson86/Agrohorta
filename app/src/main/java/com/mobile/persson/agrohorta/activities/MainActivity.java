@@ -28,7 +28,6 @@ import com.mobile.persson.agrohorta.adapters.ContentAdapter;
 import com.mobile.persson.agrohorta.database.dao.PlantsDAO;
 import com.mobile.persson.agrohorta.database.models.PlantModel;
 import com.mobile.persson.agrohorta.database.models.PlantModelRealm;
-import com.mobile.persson.agrohorta.services.PlantListService_;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -38,6 +37,12 @@ import org.androidannotations.annotations.ViewById;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.reactivex.Completable;
+import io.reactivex.Flowable;
+import io.reactivex.Scheduler;
+import io.reactivex.functions.Action;
+import io.reactivex.schedulers.Schedulers;
 
 @EActivity(R.layout.activity_main)
 public class MainActivity extends BaseActivity {
@@ -105,9 +110,9 @@ public class MainActivity extends BaseActivity {
 
     @Background
     public void callIntentService(String step) {
-        Intent it = new Intent(getApplicationContext(), PlantListService_.class);
+/*        Intent it = new Intent(getApplicationContext(), PlantListService_.class);
         it.putExtra("STEP_PROCESS", step);
-        startService(it);
+        startService(it);*/
     }
 
     private void configFirebase() {
@@ -158,15 +163,26 @@ public class MainActivity extends BaseActivity {
         mPlants = new ArrayList<>();
         mPlants = plantsDAO.getPlants();
 
-        if (mPlants.isEmpty()) {
+/*        Flowable.just(getPlantsList())
+                .subscribe();*/
+
+        //Completable.fromAction(getPlantsList()).subscribeOn(Schedulers.io());
+
+/*        if (mPlants.isEmpty()) {
             getPlantsList();
         } else {
             getPlantsListCount();
-        }
+        }*/
     }
 
-    @Background()
     public void getPlantsList() {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
         mPlants = new ArrayList<>();
         mDatabaseRef.child(mNodeDatabase).child(mNodeLanguage).child(mNodePlants)
                 .addListenerForSingleValueEvent(new ValueEventListener() {

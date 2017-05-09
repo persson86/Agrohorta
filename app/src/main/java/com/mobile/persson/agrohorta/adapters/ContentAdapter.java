@@ -44,10 +44,10 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentAdapter.GridItem
 
         viewHolder.tvPlantName.setText(plant.getPlantName());
 
-        Glide.with(viewHolder.ivPlantImage.getContext())
+/*        Glide.with(viewHolder.ivPlantImage.getContext())
                 .using(new FirebaseImageLoader())
                 .load(mImageRef.child(plant.getPlantImage()))
-                .into(viewHolder.ivPlantImage);
+                .into(viewHolder.ivPlantImage);*/
     }
 
     @Override

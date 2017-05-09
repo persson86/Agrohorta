@@ -24,22 +24,22 @@ public class LauncherMenuActivity extends AppCompatActivity {
 
     @Click
     void btRegisterPlant() {
-        RegisterPlantActivity_.intent(getApplicationContext())
-                .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .start();
+        //RegisterPlantActivity_.intent(getApplicationContext())
+         //       .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
+          //      .start();
     }
 
     @Click
     void btRegisterRelation() {
-        RegisterPlantRelationActivity_.intent(getApplicationContext())
-                .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .start();
+        //RegisterPlantRelationActivity_.intent(getApplicationContext())
+          //      .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            //    .start();
     }
 
     @Click
     void btGoToApp() {
-        MainActivity_.intent(getApplicationContext())
-                .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .start();
+        //MainActivity_.intent(getApplicationContext())
+            //    .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
+          //      .start();
     }
 }

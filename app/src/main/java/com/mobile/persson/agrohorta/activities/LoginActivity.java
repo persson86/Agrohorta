@@ -64,10 +64,10 @@ public class LoginActivity extends AppCompatActivity {
     @AfterViews
     void initiliaze() {
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            ProfileActivity_.intent(getApplicationContext())
-                    .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    .start();
-            finish();
+            //ProfileActivity_.intent(getApplicationContext())
+             //       .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
+               //     .start();
+            //finish();
         } else {
 
             setAuthStateListener();
@@ -126,9 +126,9 @@ public class LoginActivity extends AppCompatActivity {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
                     if (user.getDisplayName() != null) {
-                        ProfileActivity_.intent(getApplicationContext())
-                                .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                .start();
+                        //ProfileActivity_.intent(getApplicationContext())
+                          //      .flags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            //    .start();
                         finish();
                     }
                 } else {
