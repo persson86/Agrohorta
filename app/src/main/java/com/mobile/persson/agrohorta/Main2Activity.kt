@@ -5,53 +5,60 @@ import android.os.Bundle
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
+import android.widget.Toast
+import com.androidhuman.rxfirebase2.database.RxFirebaseDatabase
+import com.androidhuman.rxfirebase2.database.data
+import com.androidhuman.rxfirebase2.database.dataChanges
 import com.google.firebase.database.*
 import com.mobile.persson.agrohorta.adapters.ContentAdapter
 import com.mobile.persson.agrohorta.database.models.PlantModel
 import com.mobile.persson.agrohorta.database.models.PlantModelRealm
+import io.reactivex.Flowable
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_main2.*
 import java.util.ArrayList
+import com.google.firebase.database.DataSnapshot
+import java.util.function.Consumer
 
 
 class Main2Activity : AppCompatActivity() {
 
+    val mDatabaseRef: DatabaseReference? = FirebaseDatabase.getInstance().getReference()
     var plants: MutableList<PlantModelRealm> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
-        getNews()
+        //getNews()
+        test()
     }
 
-    fun getLists(): ArrayList<PlantModelRealm> {
-        val plants = ArrayList<PlantModelRealm>()
-        var plant = PlantModelRealm()
+    fun test(){
+        val ref: DatabaseReference = FirebaseDatabase.getInstance().reference
 
-        plant.plantName = "planta 1 teste"
-        plants.add(plant)
+        ref.child(getString(R.string.node_database))
+                .child("language_en")
+                .child(getString(R.string.node_plant_list))
+                .dataChanges()
+                .subscribe({
+                    if (it.exists()) {
+                        Log.i("teste", it.value.toString())
+                    } else {
+                        // Data does not exists
+                    }
+                }) {
+                    // Handle error
+                }
 
-        plant = PlantModelRealm()
-        plant.plantName = "planta 2 teste"
-        plants.add(plant)
 
-        plant = PlantModelRealm()
-        plant.plantName = "planta 3 teste"
-        plants.add(plant)
-
-        plant = PlantModelRealm()
-        plant.plantName = "planta 4 teste"
-        plants.add(plant)
-
-        plant = PlantModelRealm()
-        plant.plantName = "planta 5 teste"
-        plants.add(plant)
-
-        return plants
+        /*ref.child(getString(R.string.node_database))?.child("language_en")?.child(getString(R.string.node_plant_list))?.data()
+                ?.subscribe({
+                    Toast.makeText(applicationContext, "teste", Toast.LENGTH_SHORT).show()
+                }) {
+                    // NoSuchElementException is thrown when there are no data exist
+                }*/
     }
-
-    private var mDatabaseRef: DatabaseReference? = FirebaseDatabase.getInstance().getReference();
-
 
     fun getNews(): Observable<List<PlantModelRealm>> {
         return Observable.create {
@@ -64,7 +71,7 @@ class Main2Activity : AppCompatActivity() {
     }
 
     fun getPlantList() {
-        mDatabaseRef?.child(getString(R.string.node_database))?.child("en")?.child(getString(R.string.node_plant_list))
+        mDatabaseRef?.child(getString(R.string.node_database))?.child("language_en")?.child(getString(R.string.node_plant_list))
                 ?.addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
                         for (data in dataSnapshot.children) {
@@ -81,7 +88,7 @@ class Main2Activity : AppCompatActivity() {
                     }
 
                     override fun onCancelled(databaseError: DatabaseError) {
-                        //TODO tratar erros
+                        Toast.makeText(applicationContext, "erro", Toast.LENGTH_SHORT).show()
                     }
                 })
     }
