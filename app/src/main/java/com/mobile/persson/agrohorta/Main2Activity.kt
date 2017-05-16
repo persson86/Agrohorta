@@ -1,7 +1,9 @@
 package com.mobile.persson.agrohorta
 
+import android.os.AsyncTask
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -10,6 +12,7 @@ import android.widget.Toast
 import com.androidhuman.rxfirebase2.database.RxFirebaseDatabase
 import com.androidhuman.rxfirebase2.database.data
 import com.androidhuman.rxfirebase2.database.dataChanges
+import com.google.android.gms.tasks.Tasks.await
 import com.google.firebase.database.*
 import com.mobile.persson.agrohorta.adapters.ContentAdapter
 import com.mobile.persson.agrohorta.database.models.PlantModel
@@ -19,6 +22,11 @@ import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_main2.*
 import java.util.ArrayList
 import com.google.firebase.database.DataSnapshot
+import io.reactivex.Scheduler
+import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 
 
@@ -31,17 +39,41 @@ class Main2Activity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
         //getNews()
-        test()
+        //test()
+
+        myButton.text = "teste meu botao"
+
+        //test()
+        //myButton.text("teste meu botao")
+
+/*        val uiHandler = Handler()
+        object : Thread(){
+            override fun run() {
+                val loadedText = test()
+                uiHandler.post {
+                    Toast.makeText(applicationContext, loadedText.toString(), Toast.LENGTH_SHORT).show()
+                    //txtResult.text = loadedText
+                    //progressBar.visibility = View.INVISIBLE
+                }
+            }
+        }.start()*/
     }
 
-    fun test(){
+
+    fun test() {
         val ref: DatabaseReference = FirebaseDatabase.getInstance().reference
 
         ref.child(getString(R.string.node_database))
                 .child("language_en")
                 .child(getString(R.string.node_plant_list))
                 .dataChanges()
+//                .subscribeOn(Schedulers.io())
                 .subscribe({
+                    try {
+                        Thread.sleep(10000)
+                    } finally {
+
+                    }
                     if (it.exists()) {
                         Log.i("teste", it.value.toString())
                     } else {
@@ -50,14 +82,6 @@ class Main2Activity : AppCompatActivity() {
                 }) {
                     // Handle error
                 }
-
-
-        /*ref.child(getString(R.string.node_database))?.child("language_en")?.child(getString(R.string.node_plant_list))?.data()
-                ?.subscribe({
-                    Toast.makeText(applicationContext, "teste", Toast.LENGTH_SHORT).show()
-                }) {
-                    // NoSuchElementException is thrown when there are no data exist
-                }*/
     }
 
     fun getNews(): Observable<List<PlantModelRealm>> {
